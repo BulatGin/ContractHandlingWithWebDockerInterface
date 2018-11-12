@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Replica Admin</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/app.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <div class="add-header">
+        <a id="add-replica">
+            <span class="add-text">Add new replica</span> <span class="glyphicon glyphicon-plus add-glyph"></span>
+        </a>
+    </div>
+    <div class="replicas-table-container">
+        <table id="replicas-table" class="table table-striped">
+            <thead><tr>
+                <th scope="col">ID</th>
+                <th scope="col">Status</th>
+                <th scope="col">Remove</th>
+            </tr></thead>
+            <tbody id="replicas-table-body"></tbody>
+        </table>
+    </div>
+</body>
+</html>
