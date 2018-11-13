@@ -29,11 +29,11 @@ function addNewReplica(id, status='RUNNING', cpu=0.0, memory=0) {
                      <td name="status" class="${status.toLowerCase()}">${status}</td>
                      <td name="cpu">${cpu}%</td>
                      <td name="memory">${memory}Mb</tdname>
-                     <td><a class="remove-replica">Remove</a></td>
+                     <td><a class="remove-replica" forId="${id}">Remove</a></td>
                    </tr>`;
     $('#replicas-table-body').append(replica);
 
-    $('.remove-replica').click(function (e) {
+    $(`.remove-replica[forId='${id}']`).click(function (e) {
         e.preventDefault();
 
         $.ajax({

@@ -36,6 +36,8 @@ public class ReplicaServiceImpl implements ReplicaService {
     private Long memoryLimit;
     @Value("${replicableService.network.id}")
     private String networkId;
+    @Value("${replicableService.timeoutBeforeRemove}")
+    private int timeoutBeforeRemove;
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Override
@@ -58,11 +60,26 @@ public class ReplicaServiceImpl implements ReplicaService {
 
     @Override
     public void removeReplica(String id) throws DockerException, InterruptedException, IllegalArgumentException {
-        dockerClient.stopContainer(id, 10);
-        // TODO deleting container after timeout
+        dockerClient.stopContainer(id, timeoutBeforeRemove); // removing doesn't work
         Replica replica = replicaRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Illegal id"));
         replica.setStatus(Status.STOPPED);
         replicaRepository.save(replica);
+
+        executorService.execute(() -> {
+            try {
+                Thread.sleep(timeoutBeforeRemove);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                dockerClient.removeContainer(replica.getContainerId());
+                replica.setStatus(Status.DELETED);
+                replicaRepository.save(replica);
+                removeContainerFromDb(replica.getContainerId());
+            } catch (DockerException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override

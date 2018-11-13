@@ -23,8 +23,13 @@
     cursor: pointer;
 }
 
-.stopped {
+.deleted {
     color: red;
+    font-weight: bold;
+}
+
+.stopped {
+    color: yellow;
     font-weight: bold;
 }
 
