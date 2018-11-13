@@ -1,5 +1,6 @@
 package ru.itis.dockerweb.managmentservice.services.implement;
 
+import com.spotify.docker.client.ContainerNotFoundException;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.messages.*;
@@ -78,11 +79,17 @@ public class ReplicaServiceImpl implements ReplicaService {
         for (Replica replica : activeReplicas) {
             if (Status.RUNNING.equals(replica.getStatus())) {
                 tasks.add(() -> {
-                    ContainerStats stats = dockerClient.stats(replica.getContainerId());
-                    replica.setMemoryUsage(stats.memoryStats().usage());
-                    replica.setCpu(calculateCPUPercent(stats.precpuStats(), stats.cpuStats()));
-                    // TODO if container not found excep., initiate deleting container from redis
-                    // and set DELETED status
+                    try {
+                        ContainerStats stats = dockerClient.stats(replica.getContainerId());
+                        replica.setMemoryUsage(stats.memoryStats().usage());
+                        replica.setCpu(calculateCPUPercent(stats.precpuStats(), stats.cpuStats()));
+                    } catch (ContainerNotFoundException e) {
+                        replica.setStatus(Status.DELETED);
+                        replica.setMemoryUsage(0L);
+                        replica.setCpu(0.0);
+                        replicaRepository.save(replica);
+                        removeContainerFromDb(replica.getContainerId());
+                    }
                     return null;
                 });
             }
@@ -97,8 +104,12 @@ public class ReplicaServiceImpl implements ReplicaService {
         long cpuDelta = cpuStats.cpuUsage().totalUsage() - preCpuStats.cpuUsage().totalUsage();
         long systemDelta = cpuStats.systemCpuUsage() - preCpuStats.systemCpuUsage();
         if (systemDelta > 0 && cpuDelta > 0) {
-            cpuPercent = ((double)cpuDelta / (double)systemDelta) * 100;
+            cpuPercent = ((double)cpuDelta / (double)systemDelta) * (double)cpuStats.cpuUsage().percpuUsage().size() * 100;
         }
         return cpuPercent;
+    }
+
+    private void removeContainerFromDb(String containerId) {
+        executorService.execute(() -> replicaRepository.deleteById(containerId));
     }
 }
