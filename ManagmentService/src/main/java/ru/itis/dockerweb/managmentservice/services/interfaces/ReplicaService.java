@@ -15,5 +15,7 @@ public interface ReplicaService {
     void removeReplica(String id) throws DockerException, InterruptedException;
 
     List<Replica> getAll();
+
+    List<Replica> pullReplicasUpdate() throws InterruptedException;
     //List<?> getStatsList();
 }

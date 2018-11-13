@@ -1,3 +1,5 @@
+let stompClient = null;
+
 $(document).ready(function () {
     $.ajax({
         method: 'GET',
@@ -17,10 +19,18 @@ $(document).ready(function () {
             }
         });
     });
+
+    connectToWSServer();
 });
 
-function addNewReplica(id, status='RUNNING') {
-    let replica = `<tr id="row-${id}"><td>${id}</td><td name="status" class="${status.toLowerCase()}">${status}</td><td><a class="remove-replica">Remove</a></td></tr>`;
+function addNewReplica(id, status='RUNNING', cpu=0.0, memory=0) {
+    let replica = `<tr id="row-${id}">
+                     <td>${id}</td>
+                     <td name="status" class="${status.toLowerCase()}">${status}</td>
+                     <td name="cpu">${cpu}%</td>
+                     <td name="memory">${memory}Mb</tdname>
+                     <td><a class="remove-replica">Remove</a></td>
+                   </tr>`;
     $('#replicas-table-body').append(replica);
 
     $('.remove-replica').click(function (e) {
@@ -41,4 +51,25 @@ function addNewReplica(id, status='RUNNING') {
             }
         });
     });
-}
+};
+
+function connectToWSServer() {
+    let socket = new SockJS('/connect');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
+        subscribeToReplicasUpdates();
+    });
+};
+
+function subscribeToReplicasUpdates() {
+    stompClient.subscribe('/topic/replicasListUpdate', function (msg) {
+        $('#replicas-table-body').empty();
+        let replicas = JSON.parse(msg.body);
+        replicas.forEach(r => addNewReplica(r.containerId,
+            r.status,
+            Math.round(r.cpu * 100)/100,
+            Math.round(r.memoryUsage/1024/1024 * 100) / 100));
+    });
+    console.log('Subscribed to /topic/replicasListUpdate');
+};

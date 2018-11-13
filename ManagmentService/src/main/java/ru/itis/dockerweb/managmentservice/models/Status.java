@@ -6,5 +6,5 @@ package ru.itis.dockerweb.managmentservice.models;
  */
 
 public enum Status {
-    RUNNING, STOPPED
+    RUNNING, STOPPED, DELETED
 }

@@ -22,4 +22,8 @@ public class Replica {
     private String containerId;
 
     private Status status;
+
+    private Long memoryUsage;
+
+    private Double cpu;
 }
